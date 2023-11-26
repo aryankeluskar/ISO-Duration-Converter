@@ -11,7 +11,7 @@
 Open your broswer at [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ## Usage
-Visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
+Visit [iso-duration-converter.onrender.com](https://iso-duration-converter.onrender.com/) to access this API
 
 ### GET '/'
     Parameters: None <br>
