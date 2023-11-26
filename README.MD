@@ -1,5 +1,6 @@
 ## Install
 
+    gh repo clone aryankeluskar/ISO-Duration-Converter
     pip install fastapi
     pip install "uvicorn[standard]"
 
