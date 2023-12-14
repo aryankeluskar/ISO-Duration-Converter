@@ -1,7 +1,14 @@
 from fastapi import FastAPI, Response, Cookie, Request
 from typing import Annotated
 import json
+import pymongo
+from pymongo import UpdateOne
+import requests
+import json
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 app = FastAPI()
 
@@ -14,11 +21,20 @@ app = FastAPI()
 
 
 def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False):
-    try:
-        totalCalls += 1
-        if not previouslyUsed:
-            uniqueUsers += 1
+    currAnalytics = getAnalytics()
+    print(currAnalytics)
+    if not previouslyUsed:
+        setAnalytics(
+            currAnalytics["document"]["totalCalls"] + 1,
+            currAnalytics["document"]["uniqueUsers"] + 1,
+        )
+    else:
+        setAnalytics(
+            currAnalytics["document"]["totalCalls"] + 1,
+            currAnalytics["document"]["uniqueUsers"],
+        )
 
+    try:
         if "H" in ISODuration and "M" in ISODuration and "S" in ISODuration:
             videoDuration = (
                 int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
@@ -80,9 +96,22 @@ def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False):
 
 
 def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False):
+    currAnalytics = getAnalytics()
+    print(currAnalytics)
+    if not previouslyUsed:
+        setAnalytics(
+            currAnalytics["document"]["totalCalls"] + 1,
+            currAnalytics["document"]["uniqueUsers"] + 1,
+        )
+    else:
+        setAnalytics(
+            currAnalytics["document"]["totalCalls"] + 1,
+            currAnalytics["document"]["uniqueUsers"],
+        )
+
     totalCalls += 1
     if not previouslyUsed:
-      uniqueUsers += 1
+        uniqueUsers += 1
     try:
         print(MillisecondsDuration)
         MillisecondsDuration = int(MillisecondsDuration)
@@ -97,17 +126,64 @@ def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False):
     return ISODuration
 
 
+"""
+   @param: None
+   @return json_response: JSON response.
+   @description: This function retrieves the document stored in MongoDB Atlas which has the latest analytics data.
+"""
+
+
 def getAnalytics():
     # Perform analytics calculations
+    payload = json.dumps(
+        {
+            "collection": "ISODuration",
+            "database": "API_Analytics",
+            "dataSource": "Cluster0",
+            "projection": {"_id": 1, "totalCalls": 1, "uniqueUsers": 1},
+        }
+    )
+    headers = {
+        "apiKey": os.getenv("MONGODP_APIKEY"),
+        "Content-Type": "application/ejson",
+        "Accept": "application/json",
+    }
+    response = requests.request(
+        "POST", os.getenv("MONGODP_READURL"), headers=headers, data=payload
+    )
+    print(response.text)
+
+    json_response = json.loads(response.text)
+    return json_response
 
 
-    # Create JSON object
-    analytics = {
-        "totalCalls": totalCalls,
-        "uniqueUsers": uniqueUsers,
+"""
+   @param: newCalls: number to be updated for totalCalls.
+   @param: newUsers: number to be updated for uniqueUsers.
+   @return None
+   @description: This function updates the document stored in MongoDB Atlas.
+   """
+
+
+def setAnalytics(newCalls: int = 0, newUsers: int = 0):
+    headers = {
+        "apiKey": os.getenv("MONGODP_APIKEY"),
+        "Content-Type": "application/ejson",
+        "Accept": "application/json",
+    }
+    payload = {
+        "dataSource": "Cluster0",
+        "database": "API_Analytics",
+        "collection": "ISODuration",
+        "filter": {"_id": {"$oid": "6579334f6cd998706e6e7b1d"}},
+        "update": {"$set": {"totalCalls": newCalls, "uniqueUsers": newUsers}},
     }
 
-    return analytics
+    response = requests.post(
+        os.getenv("MONGODB_UPDATEURL"), headers=headers, data=json.dumps(payload)
+    )
+    print(response.text)
+    print("setting analytics")
 
 
 @app.get("/")
@@ -121,18 +197,21 @@ async def root():
 
 
 @app.get("/convertFromISO/")
-async def root(duration: str = "PT0H0M0S", request: Request=None):
-    return getDurationInMilliseconds(duration, bool(request.cookies.get("previouslyUsed")))
+async def root(duration: str = "PT0H0M0S", request: Request = None):
+    return getDurationInMilliseconds(
+        duration, bool(request.cookies.get("previouslyUsed"))
+    )
 
 
 @app.get("/convertFromMilliseconds/")
-async def root(duration: str = 0, request: Request=None):
+async def root(duration: str = 0, request: Request = None):
     return getDurationInISO(duration, bool(request.cookies.get("previouslyUsed")))
 
 
 @app.get("/analytics/")
 async def root():
     # print(request.cookies.get("previouslyUsed"))
+    #  setAnalytics(26, 13)
     return getAnalytics()
 
 
