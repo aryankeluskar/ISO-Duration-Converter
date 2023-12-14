@@ -196,7 +196,7 @@ async def root(
     duration: str = "PT0H0M0S", request: Request = None, response: Response = None
 ):
     return getDurationInMilliseconds(
-        duration, bool(request.cookies.get("previouslyUsed"), response)
+        duration, bool(request.cookies.get("previouslyUsed")), response
     )
 
 
