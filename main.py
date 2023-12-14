@@ -1,8 +1,4 @@
 from fastapi import FastAPI, Response, Cookie, Request
-from typing import Annotated
-import json
-import pymongo
-from pymongo import UpdateOne
 import requests
 import json
 from dotenv import load_dotenv
@@ -20,7 +16,7 @@ app = FastAPI()
 """
 
 
-def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False):
+def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False, response: Response = None):
     currAnalytics = getAnalytics()
     print(currAnalytics)
     if not previouslyUsed:
@@ -82,6 +78,7 @@ def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False):
             )
         else:
             videoDuration = 0
+        response.set_cookie(key="previouslyUsed", value="true")
     except:
         return "Invalid input format. Please provide a valid ISO duration format."
 
@@ -95,7 +92,7 @@ def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False):
 """
 
 
-def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False):
+def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False, response: Response = None):
     currAnalytics = getAnalytics()
     print(currAnalytics)
     if not previouslyUsed:
@@ -108,10 +105,7 @@ def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False):
             currAnalytics["document"]["totalCalls"] + 1,
             currAnalytics["document"]["uniqueUsers"],
         )
-
-    totalCalls += 1
-    if not previouslyUsed:
-        uniqueUsers += 1
+        
     try:
         print(MillisecondsDuration)
         MillisecondsDuration = int(MillisecondsDuration)
@@ -120,6 +114,7 @@ def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False):
         seconds = (MillisecondsDuration % 60000) // 1000
 
         ISODuration = f"PT{hours}H{minutes}M{seconds}S"
+        response.set_cookie(key="previouslyUsed", value="true")
     except:
         return "Invalid input format. Please provide a valid duration in milliseconds with only digits."
 
@@ -197,15 +192,19 @@ async def root():
 
 
 @app.get("/convertFromISO/")
-async def root(duration: str = "PT0H0M0S", request: Request = None):
+async def root(
+    duration: str = "PT0H0M0S", request: Request = None, response: Response = None
+):
     return getDurationInMilliseconds(
-        duration, bool(request.cookies.get("previouslyUsed"))
+        duration, bool(request.cookies.get("previouslyUsed"), response)
     )
 
 
 @app.get("/convertFromMilliseconds/")
-async def root(duration: str = 0, request: Request = None):
-    return getDurationInISO(duration, bool(request.cookies.get("previouslyUsed")))
+async def root(duration: str = 0, request: Request = None, response: Response = None):
+    return getDurationInISO(
+        duration, bool(request.cookies.get("previouslyUsed")), response
+    )
 
 
 @app.get("/analytics/")
