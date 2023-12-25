@@ -3,7 +3,7 @@ Built using Python, FastAPI, hosted on Render.com <br>
 Multiple APIs (like YouTube's) return media's duration in ISO Format but most data is processed with Milliseconds. I created this simple-to-use **Web API** to convert either form to the other. 
 #### You get: _Skip coding logic, Directly process Milliseconds, Peace of Mind_ <br> I get _(hopefully): Star, Heart, Follow :)_
 
-[<img src="https://run.pstmn.io/button.svg" alt="Try In Postman" style="width: 140px; height: 35px;">](https://www.postman.com/altimetry-explorer-27820642/workspace/all-my-apis/collection/31514208-08c0b3ff-f7ca-4389-b9f9-e1608a928670?action=share&creator=31514208)
+[<img src="https://run.pstmn.io/button.svg" alt="Try In Postman" style="width: 140px; height: 35px;">](https://www.postman.com/altimetry-explorer-27820642/workspace/all-apis-developed-by-aryan-keluskar/collection/31514208-08c0b3ff-f7ca-4389-b9f9-e1608a928670?action=share&creator=31514208)
 
 ## Install (Only if local instance needed)
     Requirements: gh, pip, python 3.12+
