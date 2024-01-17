@@ -1,6 +1,4 @@
 from fastapi import FastAPI, Response, Cookie, Request
-import requests
-import json
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
