@@ -145,14 +145,14 @@ def make_request(url=None, method="GET", headers=None, data=None):
     #  print("making request", method, url, headers, data)
     try:
         if method == "GET":
-            with session.get(url) as response:
+            with requests.session.get(url) as response:
                 if response.status == 200:
                     return response.json()
                 else:
                     print(f"Error: {response.status}")
                     return None
         elif method == "POST":
-            with session.post(url, headers=headers, data=data) as response:
+            with requests.session.post(url, headers=headers, data=data) as response:
                 if response.status == 200:
                     return response.json()
                 else:
@@ -195,7 +195,7 @@ def setAnalytics(newCalls: int = 0) -> str:
     }
 
     response = make_request(
-        session,
+        requests.session,
         os.getenv("MONGODB_UPDATEURL"),
         "POST",
         headers=headers,
