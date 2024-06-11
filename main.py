@@ -9,27 +9,30 @@ load_dotenv()
 app = FastAPI()
 
 
-"""
-   @param: ISODuration: Duration in ISO Format. 
-   @return videoDuration: Duration in milliseconds.
-   @description: This function converts the duration of the track from ISO Format to milliseconds by analysing every permuation of the format.
-"""
 
 
-def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False, response: Response = None):
-    currAnalytics = getAnalytics()
-    print(currAnalytics)
-    if not previouslyUsed:
-        setAnalytics(
-            currAnalytics["document"]["totalCalls"] + 1,
-            currAnalytics["document"]["uniqueUsers"] + 1,
-        )
-    else:
-        setAnalytics(
-            currAnalytics["document"]["totalCalls"] + 1,
-            currAnalytics["document"]["uniqueUsers"],
-        )
+def getDurationInMilliseconds(
+    ISODuration, previouslyUsed: bool = False, response: Response = None
+):
+    r"""
+    Convert duration from ISO format to milliseconds
+    
+    Parameters
+    ---
+    ISODuration : str 
+        Duration in ISO Format. 
 
+    Returns
+    ---
+    videoDuration : int 
+        Duration in milliseconds.
+    
+    Detailed Description
+    ---
+    This function converts the duration of the track from ISO Format to milliseconds by analysing every permuation of the format.
+    """
+
+    setAnalytics(1)
     try:
         if "H" in ISODuration and "M" in ISODuration and "S" in ISODuration:
             videoDuration = (
@@ -85,27 +88,27 @@ def getDurationInMilliseconds(ISODuration, previouslyUsed: bool = False, respons
     return videoDuration
 
 
-"""
-   @param: MillisecondsDuration: Duration in milliseconds. 
-   @return ISODuration: Duration in ISO Format.
-   @description: This function converts the duration of the track from milliseconds to ISO Format.
-"""
+def getDurationInISO(
+    MillisecondsDuration, previouslyUsed: bool = False, response: Response = None
+):
+    r"""
+    Convert duration from milliseconds to ISO format
+    
+    Parameters
+    ---
+    MillisecondsDuration : int 
+        Duration in milliseconds. 
 
-
-def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False, response: Response = None):
-    currAnalytics = getAnalytics()
-    print(currAnalytics)
-    if not previouslyUsed:
-        setAnalytics(
-            currAnalytics["document"]["totalCalls"] + 1,
-            currAnalytics["document"]["uniqueUsers"] + 1,
-        )
-    else:
-        setAnalytics(
-            currAnalytics["document"]["totalCalls"] + 1,
-            currAnalytics["document"]["uniqueUsers"],
-        )
-        
+    Returns
+    ---
+    ISODuration : str 
+        Duration in ISO Format.
+    
+    Detailed Description
+    ---
+    This function converts the duration of the track from milliseconds to ISO Format .
+    """
+    setAnalytics(requests.Session(), 1)
     try:
         print(MillisecondsDuration)
         MillisecondsDuration = int(MillisecondsDuration)
@@ -120,47 +123,60 @@ def getDurationInISO(MillisecondsDuration, previouslyUsed: bool = False, respons
 
     return ISODuration
 
+def make_request(url=None, method="GET", headers=None, data=None):
+    r"""
+    Makes a request to the url and returns the response
 
-"""
-   @param: None
-   @return json_response: JSON response.
-   @description: This function retrieves the document stored in MongoDB Atlas which has the latest analytics data.
-"""
+    Parameters
+    ---
+    url : str
+        The url to make the request to
+    method : str
+        The method of the request (GET or POST)
+    headers : dict
+        The headers of the request
+    data : dict
+        The data to send in the request
 
+    Returns
+    ---
+    The response of the request if successful, None otherwise
+    """
+    #  print("making request", method, url, headers, data)
+    try:
+        if method == "GET":
+            with session.get(url) as response:
+                if response.status == 200:
+                    return response.json()
+                else:
+                    print(f"Error: {response.status}")
+                    return None
+        elif method == "POST":
+            with session.post(url, headers=headers, data=data) as response:
+                if response.status == 200:
+                    return response.json()
+                else:
+                    print(f"Error: {response.status}")
+                    return None
+    except Exception as e:
+        print("error occured: " + str(e))
+        return "ERROR"
 
-def getAnalytics():
-    # Perform analytics calculations
-    payload = json.dumps(
-        {
-            "collection": "ISODuration",
-            "database": "API_Analytics",
-            "dataSource": "Cluster0",
-            "projection": {"_id": 1, "totalCalls": 1, "uniqueUsers": 1},
-        }
-    )
-    headers = {
-        "apiKey": os.getenv("MONGODP_APIKEY"),
-        "Content-Type": "application/ejson",
-        "Accept": "application/json",
-    }
-    response = requests.request(
-        "POST", os.getenv("MONGODP_READURL"), headers=headers, data=payload
-    )
-    print(response.text)
+def setAnalytics(newCalls: int = 0) -> str:
+    r"""
+    Updates the analytics database (hosted on MongoDB)
 
-    json_response = json.loads(response.text)
-    return json_response
+    Parameters
+    ---
+    newCalls : int
+        The number of new calls to add
+    
 
+    Returns
+    ---
+    The response of the request if successful, None otherwise
+    """
 
-"""
-   @param: newCalls: number to be updated for totalCalls.
-   @param: newUsers: number to be updated for uniqueUsers.
-   @return None
-   @description: This function updates the document stored in MongoDB Atlas.
-   """
-
-
-def setAnalytics(newCalls: int = 0, newUsers: int = 0):
     headers = {
         "apiKey": os.getenv("MONGODP_APIKEY"),
         "Content-Type": "application/ejson",
@@ -169,25 +185,43 @@ def setAnalytics(newCalls: int = 0, newUsers: int = 0):
     payload = {
         "dataSource": "Cluster0",
         "database": "API_Analytics",
-        "collection": "ISODuration",
-        "filter": {"_id": {"$oid": "6579334f6cd998706e6e7b1d"}},
-        "update": {"$set": {"totalCalls": newCalls, "uniqueUsers": newUsers}},
+        "collection": "SpotifyToYoutube",
+        "filter": {"_id": {"$oid": os.getenv("MONGO_OID")}},
+        "update": {
+            "$inc": {
+                "ISOtotalCalls": newCalls,
+            }
+        },
     }
 
-    response = requests.post(
-        os.getenv("MONGODB_UPDATEURL"), headers=headers, data=json.dumps(payload)
+    response = make_request(
+        session,
+        os.getenv("MONGODB_UPDATEURL"),
+        "POST",
+        headers=headers,
+        data=json.dumps(payload),
     )
-    print(response.text)
-    print("setting analytics")
+    if response:
+        print("was database modification successful? " + str(response))
+        # print("setting analytics\n")
+        #  print(response.text)
+        #  return response.text
+    return response
 
 
 @app.get("/")
 async def root():
+    r"""
+    Returns home page with instructions on how to use the API
+    """
     return "Choose one of the two paths: /convertFromISO or /convertFromMilliseconds \nPass duration as a query parameter."
 
 
 @app.get("/help")
 async def root():
+    r"""
+    Returns help page with instructions on how to use the API
+    """
     return "Choose one of the two paths: /convertFromISO or /convertFromMilliseconds \nPass duration as a query parameter."
 
 
@@ -195,6 +229,23 @@ async def root():
 async def root(
     duration: str = "PT0H0M0S", request: Request = None, response: Response = None
 ):
+    r"""
+    Convert duration from ISO format to milliseconds
+
+    Parameters
+    ---
+    duration : str
+        Duration in ISO Format. 
+
+    Returns
+    ---
+    MillisecondsDuration : int
+        Duration in milliseconds.
+    
+    Detailed Description
+    ---
+    This route converts the duration of the track from ISO format to milliseconds .
+    """
     return getDurationInMilliseconds(
         duration, bool(request.cookies.get("previouslyUsed")), response
     )
@@ -202,19 +253,23 @@ async def root(
 
 @app.get("/convertFromMilliseconds/")
 async def root(duration: str = 0, request: Request = None, response: Response = None):
+    r"""
+    Convert duration from milliseconds to ISO format
+
+    Parameters
+    ---
+    duration : int
+        Duration in milliseconds. 
+
+    Returns
+    ---
+    ISODuration : str
+        Duration in ISO Format.
+    
+    Detailed Description
+    ---
+    This route converts the duration of the track from milliseconds to ISO format.
+    """
     return getDurationInISO(
         duration, bool(request.cookies.get("previouslyUsed")), response
     )
-
-
-@app.get("/analytics/")
-async def root():
-    # print(request.cookies.get("previouslyUsed"))
-    #  setAnalytics(26, 13)
-    return getAnalytics()
-
-
-@app.get("/cookie-and-object/")
-def create_cookie(response: Response):
-    response.set_cookie(key="previouslyUsed", value="true")
-    return {"message": "Come to the dark side, we have cookies"}
