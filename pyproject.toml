@@ -1,0 +1,11 @@
+[tool.ruff]
+
+select = ["E", "F", "W", "Q", "I"]
+
+ignore = ["E203"]
+
+fixable = ["ALL"]
+
+unfixable = []
+
+line-length = 79

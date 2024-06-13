@@ -1,14 +1,13 @@
-from fastapi import FastAPI, Response, Cookie, Request
-import requests
 import json
-from dotenv import load_dotenv
 import os
+
+import requests
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request, Response
 
 load_dotenv()
 
 app = FastAPI()
-
-
 
 
 def getDurationInMilliseconds(
@@ -16,97 +15,151 @@ def getDurationInMilliseconds(
 ):
     r"""
     Convert duration from ISO format to milliseconds
-    
+
     Parameters
     ---
-    ISODuration : str 
-        Duration in ISO Format. 
+    ISODuration : str
+        Duration in ISO Format.
 
     Returns
     ---
-    videoDuration : int 
+    videoDuration : int
         Duration in milliseconds.
-    
+
     Detailed Description
     ---
-    This function converts the duration of the track from ISO Format to milliseconds by analysing every permuation of the format.
+    This function converts the duration of the track from ISO Format to
+    milliseconds by analysing every permuation of the format.
     """
 
     setAnalytics(1)
     try:
         if "H" in ISODuration and "M" in ISODuration and "S" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("H")
+                    ]
+                )
                 * 3600000
-                + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("M")])
+                + int(
+                    ISODuration[
+                        ISODuration.find("H") + 1 : ISODuration.find("M")
+                    ]
+                )
                 * 60000
-                + int(ISODuration[ISODuration.find("M") + 1 : ISODuration.find("S")])
+                + int(
+                    ISODuration[
+                        ISODuration.find("M") + 1 : ISODuration.find("S")
+                    ]
+                )
                 * 1000
             )
         elif "H" in ISODuration and "M" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("H")
+                    ]
+                )
                 * 3600000
-                + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("M")])
+                + int(
+                    ISODuration[
+                        ISODuration.find("H") + 1 : ISODuration.find("M")
+                    ]
+                )
                 * 60000
             )
         elif "H" in ISODuration and "S" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("H")
+                    ]
+                )
                 * 3600000
-                + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("S")])
+                + int(
+                    ISODuration[
+                        ISODuration.find("H") + 1 : ISODuration.find("S")
+                    ]
+                )
                 * 1000
             )
         elif "M" in ISODuration and "S" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("M")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("M")
+                    ]
+                )
                 * 60000
-                + int(ISODuration[ISODuration.find("M") + 1 : ISODuration.find("S")])
+                + int(
+                    ISODuration[
+                        ISODuration.find("M") + 1 : ISODuration.find("S")
+                    ]
+                )
                 * 1000
             )
         elif "H" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("H")
+                    ]
+                )
                 * 3600000
             )
         elif "M" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("M")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("M")
+                    ]
+                )
                 * 60000
             )
         elif "S" in ISODuration:
             videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("S")])
+                int(
+                    ISODuration[
+                        ISODuration.find("T") + 1 : ISODuration.find("S")
+                    ]
+                )
                 * 1000
             )
         else:
             videoDuration = 0
         response.set_cookie(key="previouslyUsed", value="true")
-    except:
-        return "Invalid input format. Please provide a valid ISO duration format."
+    except Exception:
+        return (
+            "Invalid input format. Please provide a valid ISO duration format."
+        )
 
     return videoDuration
 
 
 def getDurationInISO(
-    MillisecondsDuration, previouslyUsed: bool = False, response: Response = None
+    MillisecondsDuration,
+    previouslyUsed: bool = False,
+    response: Response = None,
 ):
     r"""
     Convert duration from milliseconds to ISO format
-    
+
     Parameters
     ---
-    MillisecondsDuration : int 
-        Duration in milliseconds. 
+    MillisecondsDuration : int
+        Duration in milliseconds.
 
     Returns
     ---
-    ISODuration : str 
+    ISODuration : str
         Duration in ISO Format.
-    
+
     Detailed Description
     ---
-    This function converts the duration of the track from milliseconds to ISO Format .
+    This function converts the duration of the track from milliseconds to
+    ISO Format.
     """
     setAnalytics(requests.Session(), 1)
     try:
@@ -118,10 +171,12 @@ def getDurationInISO(
 
         ISODuration = f"PT{hours}H{minutes}M{seconds}S"
         response.set_cookie(key="previouslyUsed", value="true")
-    except:
-        return "Invalid input format. Please provide a valid duration in milliseconds with only digits."
+    except Exception:
+        return """Invalid input format. Please provide a valid duration
+        in milliseconds with only digits."""
 
     return ISODuration
+
 
 def make_request(url=None, method="GET", headers=None, data=None):
     r"""
@@ -152,7 +207,9 @@ def make_request(url=None, method="GET", headers=None, data=None):
                     print(f"Error: {response.status}")
                     return None
         elif method == "POST":
-            with requests.session.post(url, headers=headers, data=data) as response:
+            with requests.session.post(
+                url, headers=headers, data=data
+            ) as response:
                 if response.status == 200:
                     return response.json()
                 else:
@@ -162,6 +219,7 @@ def make_request(url=None, method="GET", headers=None, data=None):
         print("error occured: " + str(e))
         return "ERROR"
 
+
 def setAnalytics(newCalls: int = 0) -> str:
     r"""
     Updates the analytics database (hosted on MongoDB)
@@ -170,7 +228,7 @@ def setAnalytics(newCalls: int = 0) -> str:
     ---
     newCalls : int
         The number of new calls to add
-    
+
 
     Returns
     ---
@@ -214,20 +272,24 @@ async def root():
     r"""
     Returns home page with instructions on how to use the API
     """
-    return "Choose one of the two paths: /convertFromISO or /convertFromMilliseconds \nPass duration as a query parameter."
+    return """Choose one of the two paths: /convertFromISO or
+    /convertFromMilliseconds \nPass duration as a query parameter."""
 
 
 @app.get("/help")
-async def root():
+async def help():
     r"""
     Returns help page with instructions on how to use the API
     """
-    return "Choose one of the two paths: /convertFromISO or /convertFromMilliseconds \nPass duration as a query parameter."
+    return """Choose one of the two paths: /convertFromISO or
+/convertFromMilliseconds \nPass duration as a query parameter."""
 
 
 @app.get("/convertFromISO/")
-async def root(
-    duration: str = "PT0H0M0S", request: Request = None, response: Response = None
+async def convertISO(
+    duration: str = "PT0H0M0S",
+    request: Request = None,
+    response: Response = None,
 ):
     r"""
     Convert duration from ISO format to milliseconds
@@ -235,16 +297,17 @@ async def root(
     Parameters
     ---
     duration : str
-        Duration in ISO Format. 
+        Duration in ISO Format.
 
     Returns
     ---
     MillisecondsDuration : int
         Duration in milliseconds.
-    
+
     Detailed Description
     ---
-    This route converts the duration of the track from ISO format to milliseconds .
+    This route converts the duration of the track from ISO format to
+    milliseconds .
     """
     return getDurationInMilliseconds(
         duration, bool(request.cookies.get("previouslyUsed")), response
@@ -252,23 +315,26 @@ async def root(
 
 
 @app.get("/convertFromMilliseconds/")
-async def root(duration: str = 0, request: Request = None, response: Response = None):
+async def convertMilliseconds(
+    duration: str = 0, request: Request = None, response: Response = None
+):
     r"""
     Convert duration from milliseconds to ISO format
 
     Parameters
     ---
     duration : int
-        Duration in milliseconds. 
+        Duration in milliseconds.
 
     Returns
     ---
     ISODuration : str
         Duration in ISO Format.
-    
+
     Detailed Description
     ---
-    This route converts the duration of the track from milliseconds to ISO format.
+    This route converts the duration of the track from milliseconds
+    to ISO format.
     """
     return getDurationInISO(
         duration, bool(request.cookies.get("previouslyUsed")), response
